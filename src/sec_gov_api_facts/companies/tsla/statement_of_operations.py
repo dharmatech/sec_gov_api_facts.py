@@ -76,7 +76,11 @@ df_all = setup_dataframe()
 
 # df_all.query('fact == "NetIncomeLoss"').tail(40)
 
-df = pd.read_pickle('tsla-df-all-facts.pkl')
+file = os.path.join('data', 'tsla', 'df_all_facts.pkl')
+
+# df = pd.read_pickle('tsla-df-all-facts.pkl')
+
+df = pd.read_pickle(file)
 
 df_revenues               = statement_of_operations_item(df, 'Revenues')
 df_gross_profit           = statement_of_operations_item(df, 'GrossProfit')

@@ -1,7 +1,9 @@
 
 import os
 import requests
-
+import pickle
+import pandas as pd
+# ------------------------------------------------------------
 def download_company_facts(cik: str):
 
     url = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
@@ -13,173 +15,49 @@ def download_company_facts(cik: str):
     response.raise_for_status()
 
     return response
+# ------------------------------------------------------------
+def download_and_save_company_facts(symbol: str, cik: str):
 
-# response = download_company_facts('0001318605')
+    response = download_company_facts(cik)
 
-# with open('tsla-company-facts-response.pkl', 'wb') as f:
-#     pickle.dump(response.json(), f)
-# # ------------------------------------------------------------
-# import pickle
+    file = os.path.join('data', symbol, 'company_facts_response.pkl')
 
-# with open('tsla-company-facts.pkl', 'rb') as f:
-#     result = pickle.load(f)
+    os.makedirs(os.path.dirname(file), exist_ok=True)
 
-# result['facts']['us-gaap']
+    with open(file, 'wb') as f:
+        pickle.dump(response.json(), f)
 
-# response = result
-# # ------------------------------------------------------------
-# facts = list(result['facts']['us-gaap'].keys())
+    df_all = pd.DataFrame()
 
-# facts.sort()
+    taxonomies = response.json()['facts']
 
-# for elt in facts:
-#     print(elt)
-# # ------------------------------------------------------------
-# df_all = pd.DataFrame()
-
-# for fact in facts:
-
-#     print(fact)
-
-#     if 'USD' in response.json()['facts']['us-gaap'][fact]['units']:
-
-#         tmp = pd.DataFrame(response.json()['facts']['us-gaap'][fact]['units']['USD'])
-
-#         # tmp = tmp[['end', 'val']]
-
-#         tmp['fact'] = fact
-
-#         df_all = pd.concat([df_all, tmp])
-
-#     else:
-#             print(f'No USD in {fact}. Has these units: {list(response.json()['facts']['us-gaap'][fact]['units'].keys())}')
+    for taxonomy in taxonomies:
         
-# # write dataframe to pickle file
+        facts = list(response.json()['facts'][taxonomy].keys())
 
-# df_all.to_pickle('tsla-df-all-facts.pkl')
+        facts.sort()
 
-# # ------------------------------------------------------------
+        for fact in facts:
 
-# df_all[df_all['fact'] == 'Revenues']
+            units = response.json()['facts'][taxonomy][fact]['units'].keys()
 
-# # ------------------------------------------------------------
-# tmp = df_all[df_all['fact'] == 'RevenueFromContractWithCustomerExcludingAssessedTax']
+            for unit in units:
+                print(f'{taxonomy:<10}: {fact:<50}: {unit:<10}')
 
-# tmp[tmp['frame'].isna() == False]
-# # ------------------------------------------------------------
+                tmp = pd.DataFrame(response.json()['facts'][taxonomy][fact]['units'][unit])
 
-# tmp = df_all[df_all['fact'] == 'Revenues']
+                tmp['taxonomy'] = taxonomy
 
-# tmp[tmp['frame'].isna() == False].tail(40)
+                tmp['fact'] = fact
 
+                tmp['unit'] = unit
 
+                df_all = pd.concat([df_all, tmp])
 
-
-# # ------------------------------------------------------------
-# result['facts']['us-gaap']
-
-
-
-
-
-# # Now `result` contains the deserialized dictionary
-
-
-# url = 'https://data.sec.gov/api/xbrl/companyfacts/CIK0001318605.json'
-
-# headers = { 'User-Agent': os.environ.get('SEC_GOV_USER_AGENT') }
-
-# response = requests.get(url, headers=headers)
-
-# response.raise_for_status()
-
-# from pprint import pprint
-
-# pprint(response.json()['facts'], depth=1)
-# pprint(response.json()['facts']['us-gaap'].keys(), depth=1)
-# pprint(response.json()['facts']['dei'], depth=1)
-
-
-# ls = list(response.json()['facts']['us-gaap'].keys())
-
-# ls.sort()
-
-# for elt in ls:
-#     print(elt)
-
-# for elt in response.json()['facts']['us-gaap'].keys():
-#     print(elt)
-
-
-# response.json()['facts']['us-gaap']['AccountsAndNotesReceivableNet']
-
-# pprint(response.json()['facts']['us-gaap']['AccountsAndNotesReceivableNet']['units']['USD'], depth=1)
-
-
-
-
-# # df = pd.json_normalize(list(json_result['facts'].values()))
-
-# df = pd.json_normalize(response.json()['facts']['us-gaap'])
-
-
-
-
-# response.json()
-
-# df = pd.DataFrame(response.json()['filings']['recent'])
-
-
-
-
-
-# # ------------------------------------------------------------
-# df_all = pd.DataFrame()
-
-# tmp = pd.DataFrame(response.json()['facts']['us-gaap']['AccountsAndNotesReceivableNet']['units']['USD'])
-
-# tmp = tmp[['end', 'val']]
-
-# tmp['fact'] = 'AccountsAndNotesReceivableNet'
-
-# df_all = pd.concat([df_all, tmp])
-
-# tmp = pd.DataFrame(response.json()['facts']['us-gaap']['AccountsPayableCurrent']['units']['USD'])
-
-# tmp = tmp[['end', 'val']]
-
-# tmp['fact'] = 'AccountsPayableCurrent'
-
-# df_all = pd.concat([df_all, tmp])
-
-# df_all
-# # ------------------------------------------------------------
-
-# # ------------------------------------------------------------
-# df_all = pd.DataFrame()
-
-# for fact in facts:
-
-#     print(fact)
-
-#     if 'USD' in response.json()['facts']['us-gaap'][fact]['units']:
-
-#         tmp = pd.DataFrame(response.json()['facts']['us-gaap'][fact]['units']['USD'])
-
-#         tmp = tmp[['end', 'val']]
-
-#         tmp['fact'] = fact
-
-#         df_all = pd.concat([df_all, tmp])
-
-#     else:
-#             print(f'No USD in {fact}. Has these units: {list(response.json()['facts']['us-gaap'][fact]['units'].keys())}')
+    df_all = df_all[['filed', 'fy', 'fp', 'start', 'end', 'frame', 'form', 'taxonomy', 'fact', 'unit', 'accn', 'val']]
             
+    file = os.path.join('data', symbol, 'df_all_facts.pkl')
 
+    os.makedirs(os.path.dirname(file), exist_ok=True)
 
-
-# 'shares' in response.json()['facts']['us-gaap']['AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount']['units']
-# 'USD' in response.json()['facts']['us-gaap']['AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount']['units']
-# # ------------------------------------------------------------
-
-# df_all
+    df_all.to_pickle(file)
