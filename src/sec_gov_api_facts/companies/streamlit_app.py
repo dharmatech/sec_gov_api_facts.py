@@ -3,6 +3,7 @@ import streamlit as st
 
 items = [
     'hood/statement_of_operations.py',
+    'hood/balance_sheet.py',
 
     'mstr/balance_sheet.py',
     'mstr/statement_of_operations.py',

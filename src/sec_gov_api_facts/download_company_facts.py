@@ -16,6 +16,9 @@ def download_company_facts(cik: str):
 
     return response
 # ------------------------------------------------------------
+# symbol = 'hood'
+# cik = '0001783879'
+
 def download_and_save_company_facts(symbol: str, cik: str):
 
     response = download_company_facts(cik)

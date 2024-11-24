@@ -52,6 +52,11 @@ def setup_dataframe():
 
     df = pd.read_pickle(file)
 
+
+
+    # df[df['fact'] == 'SafeguardingAssetPlatformOperatorCryptoAsset']
+
+
     df_all = pd.DataFrame()
 
     # Transaction-based revenues
